@@ -1,0 +1,84 @@
+name: Go CI and container release
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Check Go formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [[ -n "$unformatted" ]]; then
+            printf 'Run gofmt on:\n%s\n' "$unformatted"
+            exit 1
+          fi
+
+      - run: go vet ./...
+      - run: go test -race ./...
+
+      - name: Build and smoke-test the image
+        run: |
+          go_version="$(go env GOVERSION)"
+          docker build --build-arg "GO_VERSION=${go_version#go}" \
+            -t chaosarmor-triage:ci .
+          actual="$(docker run --rm chaosarmor-triage:ci \
+            -service checkout -failed-requests 12 -snapshot-json)"
+          expected='{"service":"checkout","failed_requests":12,"recent_deployment":false}'
+          if [[ "$actual" != "$expected" ]]; then
+            printf 'Unexpected container output: %s\n' "$actual"
+            exit 1
+          fi
+
+      - name: Save the tested image
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: docker save -o image.tar chaosarmor-triage:ci
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: tested-container
+          path: image.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tested-container
+
+      - name: Publish tested image to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          image="ghcr.io/${REPOSITORY,,}:${RELEASE_TAG}"
+          docker load -i image.tar
+          docker tag chaosarmor-triage:ci "$image"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io \
+            --username "$GHCR_USER" --password-stdin
+          docker push "$image"
