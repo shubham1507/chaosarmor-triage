@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 type IncidentSnapshot struct {
 	Service          string
@@ -8,8 +11,13 @@ type IncidentSnapshot struct {
 	RecentDeployment bool
 }
 
-func (snapshot IncidentSnapshot) print() {
-	fmt.Printf("Service: %s\n", snapshot.Service)
-	fmt.Printf("Failed requests: %d\n", snapshot.FailedRequests)
-	fmt.Printf("Recent deployment: %t\n", snapshot.RecentDeployment)
+var (
+	_ io.WriterTo = IncidentSnapshot{}
+	_ io.WriterTo = (*IncidentSnapshot)(nil)
+)
+
+func (snapshot IncidentSnapshot) WriteTo(w io.Writer) (int64, error) {
+	written, err := fmt.Fprintf(w, "Service: %s\nFailed requests: %d\nRecent deployment: %t\n",
+		snapshot.Service, snapshot.FailedRequests, snapshot.RecentDeployment)
+	return int64(written), err
 }

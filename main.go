@@ -64,7 +64,10 @@ func main() {
 		FailedRequests:   failedRequests,
 		RecentDeployment: deployed,
 	}
-	snapshot.print()
+	if _, err := snapshot.WriteTo(os.Stdout); err != nil {
+		fmt.Fprintln(os.Stderr, "could not write incident snapshot:", err)
+		os.Exit(1)
+	}
 
 	if totalRequests != nil {
 		printAssessment(failedRequests, *totalRequests, deployed)
