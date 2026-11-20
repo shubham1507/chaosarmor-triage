@@ -59,9 +59,12 @@ func main() {
 		}
 	}
 
-	fmt.Printf("Service: %s\n", serviceName)
-	fmt.Printf("Failed requests: %d\n", failedRequests)
-	fmt.Printf("Recent deployment: %t\n", deployed)
+	snapshot := IncidentSnapshot{
+		Service:          serviceName,
+		FailedRequests:   failedRequests,
+		RecentDeployment: deployed,
+	}
+	snapshot.print()
 
 	if totalRequests != nil {
 		printAssessment(failedRequests, *totalRequests, deployed)

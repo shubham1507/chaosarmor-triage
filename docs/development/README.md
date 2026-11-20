@@ -8,6 +8,7 @@
 | [GO-004](GO-004.md) | Compare failure counts across time windows |
 | [GO-005](GO-005.md) | Separate trend calculation from CLI output |
 | [GO-006](GO-006.md) | Represent an optional request total with a pointer |
+| [GO-007](GO-007.md) | Model an incident snapshot |
 
 Each development commit includes an entry covering the change, its purpose,
 the concepts practiced, the files changed, and how to verify it.
