@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/shubham1507/chaosarmor-triage/internal/snapshot"
 
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -24,6 +25,7 @@ func main() {
 	flag.BoolVar(&showTypes, "show-types", false, "Print snapshot field types")
 	totalRequestsText := flag.String("total-requests", "", "Total requests in the same observation window")
 	historyText := flag.String("history", "", "Earlier failed-request counts, oldest first, comma-separated")
+	snapshotJSON := flag.Bool("snapshot-json", false, "Print the basic incident snapshot as JSON")
 	flag.Parse()
 
 	totalRequests, err := parseOptionalTotal(*totalRequestsText)
@@ -65,6 +67,13 @@ func main() {
 		Service:          serviceName,
 		FailedRequests:   failedRequests,
 		RecentDeployment: deployed,
+	}
+	if *snapshotJSON {
+		if err := json.NewEncoder(os.Stdout).Encode(incident); err != nil {
+			fmt.Fprintln(os.Stderr, "could not encode incident snapshot:", err)
+			os.Exit(1)
+		}
+		return
 	}
 	if _, err := incident.WriteTo(os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, "could not write incident snapshot:", err)

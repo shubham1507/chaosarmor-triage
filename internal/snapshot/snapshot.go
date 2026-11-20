@@ -8,9 +8,9 @@ import (
 
 // IncidentSnapshot records request failures and deployment status for a service.
 type IncidentSnapshot struct {
-	Service          string
-	FailedRequests   int
-	RecentDeployment bool
+	Service          string `json:"service"`
+	FailedRequests   int    `json:"failed_requests"`
+	RecentDeployment bool   `json:"recent_deployment"`
 }
 
 var (
