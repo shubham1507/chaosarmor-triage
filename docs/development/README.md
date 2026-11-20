@@ -13,6 +13,7 @@
 | [GO-009](GO-009.md) | Extract the incident snapshot package |
 | [GO-010](GO-010.md) | Export the incident snapshot as JSON |
 | [GO-011](GO-011.md) | Read and sort an incident timeline from a file |
+| [GO-012](GO-012.md) | Start the ChaosArmor Triage HTTP API |
 
 Each development commit includes an entry covering the change, its purpose,
 the concepts practiced, the files changed, and how to verify it.

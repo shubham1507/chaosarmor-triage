@@ -27,7 +27,16 @@ func main() {
 	historyText := flag.String("history", "", "Earlier failed-request counts, oldest first, comma-separated")
 	snapshotJSON := flag.Bool("snapshot-json", false, "Print the basic incident snapshot as JSON")
 	timelinePath := flag.String("timeline-file", "", "Read a headerless CSV incident timeline")
+	serve := flag.Bool("serve", false, "Start the API at 127.0.0.1:8080")
 	flag.Parse()
+
+	if *serve {
+		if err := runAPIServer(); err != nil {
+			fmt.Fprintln(os.Stderr, "API server:", err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	if *timelinePath != "" {
 		if err := printTimelineFile(os.Stdout, *timelinePath); err != nil {
