@@ -26,7 +26,16 @@ func main() {
 	totalRequestsText := flag.String("total-requests", "", "Total requests in the same observation window")
 	historyText := flag.String("history", "", "Earlier failed-request counts, oldest first, comma-separated")
 	snapshotJSON := flag.Bool("snapshot-json", false, "Print the basic incident snapshot as JSON")
+	timelinePath := flag.String("timeline-file", "", "Read a headerless CSV incident timeline")
 	flag.Parse()
+
+	if *timelinePath != "" {
+		if err := printTimelineFile(os.Stdout, *timelinePath); err != nil {
+			reportTimelineError(err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	totalRequests, err := parseOptionalTotal(*totalRequestsText)
 	if err != nil {
