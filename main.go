@@ -24,14 +24,10 @@ func main() {
 	historyText := flag.String("history", "", "Earlier failed-request counts, oldest first, comma-separated")
 	flag.Parse()
 
-	var totalRequests int
-	if *totalRequestsText != "" {
-		parsedTotal, err := strconv.Atoi(*totalRequestsText)
-		if err != nil || parsedTotal <= 0 {
-			fmt.Fprintln(os.Stderr, "total-requests must be a positive integer")
-			os.Exit(2)
-		}
-		totalRequests = parsedTotal
+	totalRequests, err := parseOptionalTotal(*totalRequestsText)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
 	}
 
 	if failedRequestsText != "" {
@@ -43,20 +39,20 @@ func main() {
 		}
 	}
 
-	if totalRequests > 0 && failedRequests > totalRequests {
+	if totalRequests != nil && failedRequests > *totalRequests {
 		fmt.Fprintln(os.Stderr, "failed-requests cannot exceed total-requests")
 		os.Exit(2)
 	}
 
 	var windows []int
 	if *historyText != "" {
-		if totalRequests == 0 {
+		if totalRequests == nil {
 			fmt.Fprintln(os.Stderr, "history requires total-requests")
 			os.Exit(2)
 		}
 
 		var err error
-		windows, err = parseFailureWindows(*historyText, failedRequests, totalRequests)
+		windows, err = parseFailureWindows(*historyText, failedRequests, *totalRequests)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(2)
@@ -67,8 +63,8 @@ func main() {
 	fmt.Printf("Failed requests: %d\n", failedRequests)
 	fmt.Printf("Recent deployment: %t\n", deployed)
 
-	if totalRequests > 0 {
-		printAssessment(failedRequests, totalRequests, deployed)
+	if totalRequests != nil {
+		printAssessment(failedRequests, *totalRequests, deployed)
 	}
 
 	if len(windows) > 0 {
@@ -137,4 +133,17 @@ func printAssessment(failedRequests, totalRequests int, deployed bool) {
 	default:
 		fmt.Println("Next check: continue monitoring the service")
 	}
+}
+
+func parseOptionalTotal(text string) (*int, error) {
+	if text == "" {
+		return nil, nil
+	}
+
+	total, err := strconv.Atoi(text)
+	if err != nil || total <= 0 {
+		return nil, fmt.Errorf("total-requests must be a positive integer")
+	}
+
+	return &total, nil
 }
