@@ -21,12 +21,16 @@ func parseFailureWindows(history string, currentFailures, totalRequests int) ([]
 	return append(windows, currentFailures), nil
 }
 
-func printFailureTrends(windows []int) {
-	trendOrder := [...]string{"improved", "unchanged", "worsened"}
+func forEachTransition(windows []int, visit func(previous, current int)) {
+	for index := 1; index < len(windows); index++ {
+		visit(windows[index-1], windows[index])
+	}
+}
+
+func summarizeFailureTrends(windows []int) map[string]int {
 	counts := make(map[string]int)
 
-	for index, current := range windows[1:] {
-		previous := windows[index]
+	forEachTransition(windows, func(previous, current int) {
 		trend := "unchanged"
 		if current < previous {
 			trend = "improved"
@@ -34,7 +38,14 @@ func printFailureTrends(windows []int) {
 			trend = "worsened"
 		}
 		counts[trend]++
-	}
+	})
+
+	return counts
+}
+
+func printFailureTrends(windows []int) {
+	trendOrder := [...]string{"improved", "unchanged", "worsened"}
+	counts := summarizeFailureTrends(windows)
 
 	fmt.Printf("Failure counts (oldest to newest): %v\n", windows)
 	for _, trend := range trendOrder {

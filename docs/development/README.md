@@ -6,6 +6,7 @@
 | [GO-002](GO-002.md) | Capture a typed incident snapshot |
 | [GO-003](GO-003.md) | Assess an incident snapshot |
 | [GO-004](GO-004.md) | Compare failure counts across time windows |
+| [GO-005](GO-005.md) | Separate trend calculation from CLI output |
 
 Each development commit includes an entry covering the change, its purpose,
 the concepts practiced, the files changed, and how to verify it.
