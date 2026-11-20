@@ -21,6 +21,7 @@ func main() {
 	flag.BoolVar(&deployed, "deployed", false, "A deployment just happened")
 	flag.BoolVar(&showTypes, "show-types", false, "Print snapshot field types")
 	totalRequestsText := flag.String("total-requests", "", "Total requests in the same observation window")
+	historyText := flag.String("history", "", "Earlier failed-request counts, oldest first, comma-separated")
 	flag.Parse()
 
 	var totalRequests int
@@ -47,12 +48,31 @@ func main() {
 		os.Exit(2)
 	}
 
+	var windows []int
+	if *historyText != "" {
+		if totalRequests == 0 {
+			fmt.Fprintln(os.Stderr, "history requires total-requests")
+			os.Exit(2)
+		}
+
+		var err error
+		windows, err = parseFailureWindows(*historyText, failedRequests, totalRequests)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+	}
+
 	fmt.Printf("Service: %s\n", serviceName)
 	fmt.Printf("Failed requests: %d\n", failedRequests)
 	fmt.Printf("Recent deployment: %t\n", deployed)
 
 	if totalRequests > 0 {
 		printAssessment(failedRequests, totalRequests, deployed)
+	}
+
+	if len(windows) > 0 {
+		printFailureTrends(windows)
 	}
 
 	if showTypes {
