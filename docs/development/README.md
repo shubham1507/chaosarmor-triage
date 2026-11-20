@@ -10,6 +10,7 @@
 | [GO-006](GO-006.md) | Represent an optional request total with a pointer |
 | [GO-007](GO-007.md) | Model an incident snapshot |
 | [GO-008](GO-008.md) | Write incident snapshots through an interface |
+| [GO-009](GO-009.md) | Extract the incident snapshot package |
 
 Each development commit includes an entry covering the change, its purpose,
 the concepts practiced, the files changed, and how to verify it.

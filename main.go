@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/shubham1507/chaosarmor-triage/internal/snapshot"
+
 	"flag"
 	"fmt"
 	"os"
@@ -59,12 +61,12 @@ func main() {
 		}
 	}
 
-	snapshot := IncidentSnapshot{
+	incident := snapshot.IncidentSnapshot{
 		Service:          serviceName,
 		FailedRequests:   failedRequests,
 		RecentDeployment: deployed,
 	}
-	if _, err := snapshot.WriteTo(os.Stdout); err != nil {
+	if _, err := incident.WriteTo(os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, "could not write incident snapshot:", err)
 		os.Exit(1)
 	}
